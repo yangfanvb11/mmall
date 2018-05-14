@@ -1,12 +1,19 @@
 package com.mmall.util;
 
+import com.google.common.collect.Lists;
+import com.mmall.pojo.User;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.type.JavaType;
+import org.codehaus.jackson.type.TypeReference;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author yf on 2018/5/4
@@ -55,6 +62,74 @@ public class JsonUtil {
             log.warn("Parse Object to String error",e);
             return null;
         }
+    }
+
+    public static <T> T string2Obj(String str,Class<T> clazz){
+        if(StringUtils.isEmpty(str)||clazz==null){
+            return null;
+        }
+        try {
+            return clazz.equals(String.class)?(T)str:objectMapper.readValue(str,clazz);
+        }catch (Exception e){
+            log.warn("Parse String to Object error",e);
+            return null;
+        }
+    }
+
+    public static <T> T string2Object(String str, TypeReference<T> typeReference){
+        if(StringUtils.isEmpty(str)||typeReference==null){
+            return null;
+        }
+        try {
+            return (T)(typeReference.getType().equals(String.class)?str:objectMapper.readValue(str,typeReference));
+        }catch (Exception e){
+            log.warn("Parse String to Object error",e);
+            return null;
+        }
+    }
+
+    public static <T> T string2Obj(String str,Class<?> collectionClass,Class<?>...elementClasses){
+        JavaType javaType = objectMapper.getTypeFactory().constructParametricType(collectionClass,elementClasses);
+        try {
+            return objectMapper.readValue(str,javaType);
+        }catch (Exception e){
+            log.warn("Parse String to Object error",e);
+            return null;
+        }
+    }
+
+    public static void main(String[] args) {
+        User u1 = new User();
+        u1.setId(1);
+        u1.setEmail("yangfanvb11@163.com");
+
+        User u2 = new User();
+        u2.setId(2);
+        u2.setEmail("2942611059@qq.com");
+
+        String user1Json = JsonUtil.obj2String(u1);
+        String user1JsonPretty = JsonUtil.obj2StringPretty(u1);
+
+        log.info("user1Json:{}",user1Json);
+        log.info("user1JsonPretty:{}",user1JsonPretty);
+
+        User user = JsonUtil.string2Obj(user1Json, User.class);
+
+        List<User> userList = Lists.newArrayList();
+        userList.add(u1);
+        userList.add(u2);
+
+        String userListStr = JsonUtil.obj2StringPretty(userList);
+
+        List<User> userListObj1 = JsonUtil.string2Object(userListStr, new TypeReference<List<User>>() {
+        });
+
+        List<User> userListObj2 = JsonUtil.string2Obj(userListStr, List.class, User.class);
+
+
+        log.info("========================");
+        log.info("userListStr:{}",userListStr);
+        System.out.println("end");
     }
 
 }
