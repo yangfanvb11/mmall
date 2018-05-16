@@ -37,7 +37,7 @@ public class CookieUtil {
         Cookie ck = new Cookie(COOKIE_NAME, token);
         ck.setDomain(COOKIE_DOMAIN);
         ck.setPath("/");
-
+        ck.setHttpOnly(true);
         //单位是秒
         //如果这个maxage不设置的话,cookie就不会写入硬盘,而是写在内存.只是当前页面有效
         ck.setMaxAge(60*60*24*365);//如果是-1,代表永久
