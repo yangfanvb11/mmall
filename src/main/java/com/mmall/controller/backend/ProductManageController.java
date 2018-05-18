@@ -147,8 +147,8 @@ public class ProductManageController {
 
     @RequestMapping("upload.do")
     @ResponseBody
-    public ServerResponse upload(HttpServletRequest httpServletRequest,@RequestParam(value = "upload_file",required = false) MultipartFile file,HttpServletRequest request){
-        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+    public ServerResponse upload(@RequestParam(value = "upload_file",required = false) MultipartFile file,HttpServletRequest request){
+        String loginToken = CookieUtil.readLoginToken(request);
         if(org.apache.commons.lang.StringUtils.isEmpty(loginToken)){
             return ServerResponse.createByErrorMessage("用户未登录,无法获取当前用户的信息");
         }
@@ -174,9 +174,9 @@ public class ProductManageController {
 
     @RequestMapping("richtext_img_upload.do")
     @ResponseBody
-    public Map richtextImgUpload(HttpServletRequest httpServletRequest, @RequestParam(value = "upload_file",required = false) MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public Map richtextImgUpload(@RequestParam(value = "upload_file",required = false) MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws Exception {
         Map resultMap = Maps.newHashMap();
-        String loginToken = CookieUtil.readLoginToken(httpServletRequest);
+        String loginToken = CookieUtil.readLoginToken(request);
         if(StringUtils.isEmpty(loginToken)){
 //            return ServerResponse.createByErrorMessage("用户未登录,无法获取当前用户的信息");
             throw new Exception("用户未登录");
