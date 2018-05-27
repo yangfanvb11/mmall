@@ -2,16 +2,22 @@ package com.mmall.common;
 
 
 import com.mmall.util.PropertiesUtil;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisShardInfo;
+import redis.clients.jedis.ShardedJedis;
+import redis.clients.jedis.ShardedJedisPool;
+import redis.clients.util.Hashing;
+import redis.clients.util.Sharded;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by yf
  */
 public class RedisShardedPool {
 
-    private static RedisShardedPool pool;//sharded jedis连接池
+    private static ShardedJedisPool pool;//sharded jedis连接池
     private static Integer maxTotal = Integer.parseInt(PropertiesUtil.getProperty("redis.max.total","20"));//最大连接数
     private static Integer maxIdle = Integer.parseInt(PropertiesUtil.getProperty("redis.max.idle","20"));//在jedispool中最大的idle状态(空闲的)的jedis实例个数
     private static Integer minIdle = Integer.parseInt(PropertiesUtil.getProperty("redis.min.idle","20"));//在jedispool中最小的idle状态(空闲的)的jedis实例个数
@@ -36,33 +42,41 @@ public class RedisShardedPool {
 
         config.setBlockWhenExhausted(true);//连接耗尽时,是否阻塞,false会抛出异常,true阻塞到超时.默认为true
 
-//        pool = new JedisPool(config,redisIp,redisPort,1000*2);
+        JedisShardInfo info1 = new JedisShardInfo(redis1Ip, redis1Port, 1000 * 2);
+        JedisShardInfo info2 = new JedisShardInfo(redis2Ip, redis2Port, 1000 * 2);
+
+        List<JedisShardInfo> jedisShardInfoList = new ArrayList<>(2);
+
+        jedisShardInfoList.add(info1);
+        jedisShardInfoList.add(info2);
+
+        pool = new ShardedJedisPool(config,jedisShardInfoList, Hashing.MURMUR_HASH, Sharded.DEFAULT_KEY_TAG_PATTERN);
     }
 
     static {
         initPool();
     }
-//
-//    public static Jedis getJedis(){
-//        return pool.getResource();
-//    }
-//
-//    public static void returnBrokenResource(Jedis jedis){
-//        pool.returnBrokenResource(jedis);
-//    }
-//
-//    public static void returnResource(Jedis jedis){
-//        pool.returnResource(jedis);
-//    }
-//
-//
-//    public static void main(String[] args) {
-//        Jedis jedis = pool.getResource();
-//        jedis.set("yfkey","yfvalue");
-//        returnResource(jedis);
-//        pool.destroy();//临时调用,销毁池中所有链接
-//
-//        System.out.println("program is end");
-//    }
+
+    public static ShardedJedis getJedis(){
+        return pool.getResource();
+    }
+
+    public static void returnBrokenResource(ShardedJedis jedis){
+        pool.returnBrokenResource(jedis);
+    }
+
+    public static void returnResource(ShardedJedis jedis){
+        pool.returnResource(jedis);
+    }
+
+
+    public static void main(String[] args) {
+        ShardedJedis jedis = pool.getResource();
+        jedis.set("yfkey","yfvalue");
+        returnResource(jedis);
+        pool.destroy();//临时调用,销毁池中所有链接
+
+        System.out.println("program is end");
+    }
 
 }
